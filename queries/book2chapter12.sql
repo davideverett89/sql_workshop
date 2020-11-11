@@ -44,4 +44,21 @@ CREATE VIEW all_customers AS
 SELECT * FROM all_customers;
 
 -- Create a view named sales2018 that shows the total number of sales for each sales type for the year 2018.
+
+CREATE VIEW sales2018 AS
+	SELECT
+		st.name AS "Sales Type",
+		COUNT(s.sale_id) AS "Number of Transactions in 2018",
+		CAST(SUM(s.price) AS money) AS "Total Sales in 2018"
+	FROM salestypes st
+	JOIN sales s ON s.sales_type_id = st.sales_type_id
+	WHERE s.purchase_date::text LIKE '2018%'
+	GROUP BY "Sales Type"
+	ORDER BY "Number of Transactions in 2018" DESC;
+	
+-- Drop the view so it can be reset and reflect changes
+DROP VIEW IF EXISTS sales2018;
+
+SELECT * FROM sales2018;
+
 -- Create a view that shows the employee at each dealership with the most number of sales.
