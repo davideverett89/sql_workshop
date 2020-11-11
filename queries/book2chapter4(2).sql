@@ -11,7 +11,8 @@ LEFT JOIN sales s ON v.vehicle_id = s.vehicle_id
 JOIN salestypes st ON s.sales_type_id = st.sales_type_id
 WHERE st.name = 'Lease'
 GROUP BY vmd.name, st.name
-ORDER BY "Number of Sales" DESC;
+ORDER BY "Number of Sales" DESC
+LIMIT 1;
 
 -- What is the most popular vehicle make in terms of number of sales?
 
@@ -24,7 +25,8 @@ JOIN vehicletypes vt ON vt.vehicle_make_id = vm.vehicle_make_id
 JOIN vehicles v ON v.vehicle_type_id = vt.vehicle_type_id
 JOIN sales s ON s.vehicle_id = v.vehicle_id
 GROUP BY vm.name, vm.vehicle_make_id
-ORDER BY "Number of Sales" DESC;
+ORDER BY "Number of Sales" DESC
+LIMIT 1;
 
 -- Which employee type sold the most of that make?
 SELECT
@@ -39,6 +41,5 @@ JOIN vehicletypes vt ON v.vehicle_type_id = vt.vehicle_type_id
 JOIN vehiclemakes vm ON vt.vehicle_make_id = vm.vehicle_make_id
 WHERE vm.vehicle_make_id = 3
 GROUP BY et.name, vm.name
-ORDER BY "Number of Units Sold" DESC;
-
-
+ORDER BY "Number of Units Sold" DESC
+LIMIT 1;
