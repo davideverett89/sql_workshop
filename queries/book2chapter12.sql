@@ -62,3 +62,16 @@ DROP VIEW IF EXISTS sales2018;
 SELECT * FROM sales2018;
 
 -- Create a view that shows the employee at each dealership with the most number of sales.
+-- TO BE CONTINUED....
+CREATE VIEW star_employee AS
+	SELECT
+		d.business_name AS "Business Name",
+		e.first_name || ' ' || e.last_name AS "Employee Name",
+		COUNT(s.sale_id) AS "Number of Sales",
+		CAST(SUM(s.price) AS money) AS "Total Earned"
+	FROM dealerships d
+	LEFT JOIN dealershipemployees de ON d.dealership_id = de.dealership_id
+	JOIN employees e ON e.employee_id = de.employee_id
+	JOIN sales s ON s.employee_id = e.employee_id
+	GROUP BY "Business Name", "Employee Name"
+	ORDER BY "Number of Sales" DESC;
