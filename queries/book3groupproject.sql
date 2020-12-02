@@ -53,14 +53,97 @@ CREATE TRIGGER make_debit
   FOR EACH ROW
 EXECUTE PROCEDURE ar_debit();
  
- INSERT INTO sales
- (sales_type_id, vehicle_id, employee_id, customer_id, dealership_id, price, deposit, purchase_date, pickup_date, invoice_number, payment_method, sale_returned)
+INSERT INTO sales
+(sales_type_id, vehicle_id, employee_id, customer_id, dealership_id, price, deposit, purchase_date, pickup_date, invoice_number, payment_method, sale_returned)
 VALUES (2, 30, 5, 10, 33, 4556, 2000,'2020-08-01', null, '5566778888', 'Visa', false);
  
- SELECT * FROM employees WHERE employee_id = 30;
- SELECT * FROM customers WHERE customer_id = 5;
- 
- SELECT * FROM accountsreceivable;
- 
- DELETE FROM accountsreceivable
- WHERE accounts_receivable_id > 0;
+SELECT * FROM employees WHERE employee_id = 30;
+SELECT * FROM customers WHERE customer_id = 5;
+
+SELECT * FROM accountsreceivable;
+
+DELETE FROM accountsreceivable
+WHERE accounts_receivable_id > 0;
+
+-- Help out HR fast track turnover by providing the following:
+
+-- Create a stored procedure with a transaction to handle hiring a new employee. 
+-- Add a new record for the employee in the Employees table and add a record to the Dealershipemployees table for the two dealerships the new employee will start at.
+
+SELECT * FROM dealerships;
+
+CREATE OR REPLACE PROCEDURE hire_employee(
+	firstName VARCHAR,
+	lastName VARCHAR,
+	emailAddress VARCHAR,
+	phoneNumber VARCHAR,
+	dealership1 VARCHAR,
+	dealership2 VARCHAR,
+	employeeType VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+	employeeId integer;
+BEGIN
+
+INSERT INTO employees
+(first_name, last_name, email_address, phone, employee_type_id)
+SELECT
+firstName, lastName, emailAddress, phoneNumber, employee_type_id
+FROM employeetypes
+WHERE name = employeeType
+RETURNING employee_id INTO employeeId;
+
+COMMIT;
+
+INSERT INTO dealershipemployees
+(dealership_id, employee_id)
+SELECT dealership_id, employeeId
+FROM dealerships
+WHERE business_name = dealership1;
+
+INSERT INTO dealershipemployees
+(dealership_id, employee_id)
+SELECT dealership_id, employeeId
+FROM dealerships
+WHERE business_name = dealership2;
+
+COMMIT;
+
+END;
+$$;
+
+CALL hire_employee('Test', 'Employee', 'test@employee.com', '333-444-5555', 'Macak Autos of California', 'Joddins Autos of Louisiana', 'Finance Manager');
+
+SELECT * FROM employees WHERE first_name = 'Test';
+
+SELECT * FROM dealershipemployees WHERE employee_id = 1003;
+
+-- Create a stored procedure with a transaction to handle an employee leaving.
+-- The employee record is removed and all records associating the employee with dealerships must also be removed.
+
+CREATE OR REPLACE PROCEDURE remove_employee(
+	firstName VARCHAR,
+	lastName VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+	employeeId INT;
+BEGIN
+
+DELETE FROM employees
+WHERE first_name = firstName AND last_name = lastName
+RETURNING employee_id INTO employeeId;
+
+DELETE FROM dealershipemployees
+WHERE employee_id = employeeId;
+
+COMMIT;
+
+END;
+$$;
+
+
+CALL remove_employee('Test', 'Employee');
