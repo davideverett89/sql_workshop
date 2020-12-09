@@ -69,5 +69,38 @@ $$ language plpgsql;
 -- For all other unsold Mazdas, update the year to 2020.
 -- The newer Mazdas all have red and black interiors.
 
+SELECT
+	v.vin,
+	v.engine_type,
+	v.year_of_car,
+	v.is_sold,
+	vmod.name "Model",
+	vmake.name "Make"
+FROM vehicles v
+JOIN vehicletypes vt ON vt.vehicle_type_id = v.vehicle_type_id
+JOIN vehiclemodels vmod ON vmod.vehicle_model_id = vt.vehicle_model_id
+JOIN vehiclemakes vmake ON vmake.vehicle_make_id = vt.vehicle_make_id
+WHERE vmake.name = 'Mazda';
+	
+DO $$
+DECLARE
+
+BEGIN
+
+UPDATE vehicles v
+SET v.year_of_car = '2021'
+FROM vehiclemodels
+JOIN vehiclestypes vt ON vt.vehicle_type_id = v.vehicle_type_id
+
+
+
+
+EXCEPTION WHEN others THEN
+ROLLBACK;
+
+END;
+
+$$ language plpgsql;
+
 -- The vehicle with VIN KNDPB3A20D7558809 has been brought in for servicing.
 -- Document that the service department did a tire change, windshield wiper fluid refill and an oil change.
