@@ -64,10 +64,13 @@ ROLLBACK;
 END;
 
 $$ language plpgsql;
-
 -- For the CX-5s and CX-9s in the inventory that have not been sold, change the year of the car to 2021 since we will be updating our stock of Mazdas.
 -- For all other unsold Mazdas, update the year to 2020.
 -- The newer Mazdas all have red and black interiors.
+
+SELECT * FROM vehiclemodels;
+
+SELECT COUNT(*) FROM vehicles;
 
 SELECT
 	v.vin,
@@ -80,20 +83,24 @@ FROM vehicles v
 JOIN vehicletypes vt ON vt.vehicle_type_id = v.vehicle_type_id
 JOIN vehiclemodels vmod ON vmod.vehicle_model_id = vt.vehicle_model_id
 JOIN vehiclemakes vmake ON vmake.vehicle_make_id = vt.vehicle_make_id
-WHERE vmake.name = 'Mazda';
+WHERE vmake.name = 'Mazda'
+AND v.is_sold = false
+AND vmod.name IN ('CX-5', 'CX-9');
 	
 DO $$
-DECLARE
 
 BEGIN
 
-UPDATE vehicles v
-SET v.year_of_car = '2021'
-FROM vehiclemodels
-JOIN vehiclestypes vt ON vt.vehicle_type_id = v.vehicle_type_id
-
-
-
+UPDATE vehicles
+SET year_of_car = '2021'
+WHERE vehicle_type_id IN (
+	SELECT
+	vt.vehicle_type_id
+FROM vehicletypes vt
+JOIN vehiclemodels vmod ON vmod.vehicle_model_id = vt.vehicle_model_id
+AND vmod.name IN ('CX-5', 'CX-9')
+)
+AND is_sold = false;
 
 EXCEPTION WHEN others THEN
 ROLLBACK;
@@ -104,3 +111,52 @@ $$ language plpgsql;
 
 -- The vehicle with VIN KNDPB3A20D7558809 has been brought in for servicing.
 -- Document that the service department did a tire change, windshield wiper fluid refill and an oil change.
+
+SELECT * FROM repairtypes;
+SELECT * FROM oilchangelogs;
+SELECT * FROM vehiclerepairtypelogs;
+
+DO $$
+
+BEGIN
+
+INSERT INTO repairtypes
+(name)
+VALUES
+('Windsheild Wiper Fluid Refill');
+
+INSERT INTO vehiclerepairtypelogs
+(date_occured, vehicle_id, repair_type_id)
+SELECT CURRENT_DATE, v.vehicle_id, r.repair_type_id
+FROM vehicles v, repairtypes r
+WHERE v.vin = 'KNDPB3A20D7558809'
+AND r.name = 'Windsheild Wiper Fluid Refill';
+
+INSERT INTO vehiclerepairtypelogs
+(date_occured, vehicle_id, repair_type_id)
+SELECT CURRENT_DATE, v.vehicle_id, r.repair_type_id
+FROM vehicles v, repairtypes r
+WHERE v.vin = 'KNDPB3A20D7558809'
+AND r.name = 'Tire Replacement';
+
+INSERT INTO vehiclerepairtypelogs
+(date_occured, vehicle_id, repair_type_id)
+SELECT CURRENT_DATE, v.vehicle_id, r.repair_type_id
+FROM vehicles v, repairtypes r
+WHERE v.vin = 'KNDPB3A20D7558809'
+AND r.name = 'Oil Change';
+
+INSERT INTO oilchangelogs
+(date_occured, vehicle_id)
+SELECT CURRENT_DATE, v.vehicle_id
+FROM vehicles v
+WHERE v.vin = 'KNDPB3A20D7558809';
+
+COMMIT;
+
+EXCEPTION WHEN others THEN
+ROLLBACK;
+
+END;
+
+$$ language plpgsql;
